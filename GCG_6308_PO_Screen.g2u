@@ -1,0 +1,72 @@
+﻿Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+v.Local.sDateScreen.Declare
+v.Local.sPO.Declare
+v.Local.sSQL.Declare
+v.Local.sYear.Declare
+Function.Intrinsic.UI.UsePixels ' Allows you to use Pixels instead of Twips throughout
+
+f.Intrinsic.Control.Try
+'Try something
+	f.Intrinsic.Control.SelectCase(v.Caller.Hook)
+		f.Intrinsic.Control.Case(16850)
+			v.Passed.000065.Set("Update Dates")
+		f.Intrinsic.Control.Case(16890)
+			
+			f.Intrinsic.String.LPad(v.Passed.000029, "0", 6, v.Local.sDateScreen)
+			'Format Date
+'			f.Intrinsic.String.Right(v.Local.sDateScreen, 4, v.Local.sYear)
+'			f.Intrinsic.String.Right(v.Local.sYear, 2, v.Local.sYear)
+'			f.Intrinsic.String.Left(v.Local.sDateScreen, 4, v.Local.sDateScreen)
+'			f.Intrinsic.String.Build("{0}{1}", v.Local.sDateScreen, v.Local.sYear, v.Local.sDateScreen)
+			
+			f.Intrinsic.String.LPad(v.Passed.000008, "0", 7, v.Local.sPO)
+			
+			f.Intrinsic.Control.If(v.Local.sPO.Trim, =, "")
+				f.Intrinsic.Control.End
+			f.Intrinsic.Control.EndIf
+			
+			f.Intrinsic.String.Build("Update PO_LINES Set Date_Due_Line = '{0}' Where Purchase_Order = '{1}' and record_no not in ('  A', '  B', '  C')", v.Local.sDateScreen, v.Local.sPO, v.Local.sSQL)
+			
+			f.ODBC.Connection!con.OpenCompanyConnection
+				f.ODBC.Connection!con.Execute(v.Local.sSQL) 
+			f.ODBC.Connection!con.Close
+			f.Intrinsic.UI.Msgbox("Update Complete")
+		f.Intrinsic.Control.Case(16870)
+
+		f.Intrinsic.Control.If(Variable.Passed.000039, =, "N")
+			f.Intrinsic.Control.If(Variable.Passed.000146.Trim, <>, "")
+				f.Intrinsic.UI.Msgbox("We have a Tax Code assigned, please check the Taxable flag before saving.")
+				Variable.Passed.777777.Set(1)
+			f.Intrinsic.Control.EndIf
+		f.Intrinsic.Control.EndIf
+	f.Intrinsic.Control.EndSelect
+	f.Intrinsic.Control.End
+f.Intrinsic.Control.Catch
+	f.Intrinsic.Control.CallSub(ErrorMsg, CurrentSub, v.Ambient.CurrentSubroutine)
+	f.Intrinsic.Control.End
+f.Intrinsic.Control.EndTry
+
+
+
+Program.Sub.Main.End
+
+Program.Sub.ErrorMsg.Start
+v.Local.sError.Declare
+
+'Closes ODBC connection, default to connection : "con"
+f.Intrinsic.Control.If(v.ODBC!con.State, =, 1)
+	f.ODBC.Connection!con.Close
+f.Intrinsic.Control.EndIf
+
+'Generic Error message.
+f.Intrinsic.String.Build("Project GCG_6197_PO_Screen.g2u {0}{0}Subroutine: {1}{0}Error: {2} with Description: {3}", v.Ambient.NewLine, v.Args.CurrentSub, v.Ambient.ErrorNumber, v.Ambient.ErrorDescription, v.Local.sError)
+f.Intrinsic.UI.Msgbox(v.Local.sError)
+Program.Sub.ErrorMsg.End
+
+Program.Sub.Comments.Start
+${$5$}$3.0.0.0$}$1
+${$6$}$aanazco$}$20210223092112077$}$7aQAV3Tor/tR9bkuakHbuzQlHVuXCGOz8/fAxM3aDIL7zi4P2XbusRh0aAYhVo5hkY7G/l3/wHg=
+Program.Sub.Comments.End
