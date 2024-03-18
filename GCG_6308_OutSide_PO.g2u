@@ -1,0 +1,103 @@
+﻿Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String,"")
+V.Local.sSql.Declare(String,"")
+V.Local.sRet.Declare(STring,"")
+V.Local.sPO.Declare(String,"")
+
+F.Intrinsic.Control.SelectCase(V.Caller.Hook)
+	F.Intrinsic.Control.Case(16090)
+		F.Intrinsic.Control.If(V.Passed.BIP_REPORTID,=,"002801")
+			'calling customer report if PO is an outside service created from the custom dashboard.
+			F.ODBC.Connection!Con.OpenCompanyConnection
+			F.Intrinsic.String.Build("Select Top 1 rtrim(PO_NO) From PRT_Laser_PO Where Terminal_No = '{0}' and RPTID = '{1}'",V.Passed.BIP_Terminal,V.Passed.BIP_REPORTID,V.Local.sSql)
+			F.ODBC.Connection!Con.ExecuteAndReturn(V.Local.sSql,V.Local.sPO)
+			F.Intrinsic.String.Build("Select Top 1 rtrim(User_1) From V_PO_Lines Where Purchase_Order = '{0}'",V.Local.sPO,V.Local.sSql)
+			F.ODBC.Connection!Con.ExecuteAndReturn(V.Local.sSql,V.Local.sRet)
+			F.ODBC.Connection!con.Close
+			
+			F.Intrinsic.Control.If(V.Local.sRet.UCase,=,"OSV")	
+				V.Passed.CANCEL.Set(-1)
+
+				F.Intrinsic.Control.CallSub(Print_Report)
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.EndIf
+		
+		F.Intrinsic.Control.CallSub(Exit)
+		
+	F.Intrinsic.Control.CaseElse
+		F.Intrinsic.Control.End
+F.Intrinsic.Control.EndSelect
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	F.Intrinsic.String.Build("Project: GCG_6197_OutSide_PO.g2u {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.NewLine,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Main.End
+
+Program.Sub.Exit.Start
+F.Intrinsic.Control.SetErrorHandler("Exit_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String,"")
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Exit_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	F.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+Program.Sub.Exit.End
+
+Program.Sub.Print_Report.Start
+F.Intrinsic.Control.SetErrorHandler("Print_Report_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String,"")
+V.Local.iRunID.Declare(Long,0)
+V.Local.iLogID.Declare(Long,0)
+V.Local.iRPTID.Declare(Long,0)
+V.Local.sParams.Declare(String,"")
+V.Local.sValues.Declare(String,"")
+V.Local.iRet.Declare(Long,0)
+
+v.Local.sVCur.Declare(String, "")
+
+v.Local.sVCur.Set(V.Passed.BIP_UseVendorCurr)
+f.Intrinsic.Control.If(v.Local.sVCur.Trim, =, "")
+	v.Local.sVCur.Set("Y")
+f.Intrinsic.Control.EndIf
+
+V.Local.sParams.Set("Terminal*!*ReportID*!*UseVendorCurr*!*PRTCNFRM*!*PRTHIST")
+F.Intrinsic.String.Build("{0}*!*{1}*!*{2}*!*{3}*!*{4}",V.Passed.BIP_Terminal,V.Passed.BIP_REPORTID, v.Local.sVCur,V.Passed.BIP_PRTCNFRM,V.Passed.BIP_PRTHIST,V.Local.sValues)
+
+F.Global.BI.GetIDFromName("GCG_6197_PU_PurchaseOrder_LongPart.rpt",V.Local.iRPTID)
+F.Global.BI.GetRunID(V.Local.iRunID)
+F.Global.BI.StartLogging(V.Local.iRunID,V.Local.iRPTID,-1,"",V.Local.iLogID)
+F.Global.BI.StopLogging(V.Local.iLogID)
+
+F.Global.BI.RunReportPreProcessor(V.Local.iRunID,V.Local.iLogID,V.Local.sParams,V.Local.sValues,"",-1,True,"",-1,"",-1,"","",V.Local.iRet)
+
+F.Intrinsic.Control.CallSub(Exit)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Print_Report_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	F.Intrinsic.String.Build("Project: GCG_6197_OutSide_PO.g2u {0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}",V.Ambient.NewLine,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Print_Report.End
+
+Program.Sub.Comments.Start
+${$5$}$2.0.0.0$}$2
+${$6$}$aanazco$}$20210210121343399$}$7aQAV3Tor/tR9bkuakHbuzQlHVuXCGOz8/fAxM3aDIIEFOJtJXi8iuxu/jfNp3ND/BiZsAZjbE0=
+Program.Sub.Comments.End7
